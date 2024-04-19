@@ -18,13 +18,18 @@ import random
 import time
 import os
 import sys
+from credentials import *
+
 
 # JSON-HTTP RPC Configuration
 # This will be particular to your local ~/.bitcoin/bitcoin.conf
 
-RPC_URL = os.environ.get("RPC_URL", "http://127.0.0.1:8332")
-RPC_USER = os.environ.get("RPC_USER", "bitcoinrpc")
-RPC_PASS = os.environ.get("RPC_PASS", "")
+# RPC_URL = os.environ.get("RPC_URL", "http://127.0.0.1:8332")
+# RPC_USER = os.environ.get("RPC_USER", "bitcoinrpc")
+# RPC_PASS = os.environ.get("RPC_PASS", "")
+
+# RPC_USER = os.environ.get("RPC_USER", "bitcoinrpc")
+# RPC_PASS = os.environ.get("RPC_PASS", "")
 
 ################################################################################
 # Bitcoin Daemon JSON-HTTP RPC
@@ -367,14 +372,13 @@ def block_make_submit(block):
 ################################################################################
 
 
-def block_mine(block_template, coinbase_message, extranonce_start, address, timeout=None, debugnonce_start=False):
+def block_mine(block_template, coinbase_message, address, timeout=None):
     """
     Mine a block.
 
     Arguments:
         block_template (dict): block template
         coinbase_message (bytes): binary string for coinbase script
-        extranonce_start (int): extranonce offset for coinbase script
         address (string): Base58 Bitcoin address for block reward
 
     Timeout:
@@ -385,9 +389,17 @@ def block_mine(block_template, coinbase_message, extranonce_start, address, time
         (block submission, hash rate) on success,
         (None, hash rate) on timeout or nonce exhaustion.
     """
-    # Add an empty coinbase transaction to the block template transactions
-    coinbase_tx = {}
-    block_template['transactions'].insert(0, coinbase_tx)
+
+    coinbase_data = tx_make_coinbase(
+        coinbase_message.encode().hex(),
+        address,
+        block_template['coinbasevalue'],
+        block_template['height']
+    )
+    block_template['transactions'].insert(0, {
+        'data': coinbase_data,
+        'hash': tx_compute_hash(coinbase_data)
+    })
 
     # Add a nonce initialized to zero to the block template
     block_template['nonce'] = 0
@@ -398,57 +410,24 @@ def block_mine(block_template, coinbase_message, extranonce_start, address, time
     # Mark our mine start time
     time_start = time.time()
 
-    # Initialize our running average of hashes per second
-    hash_rate, hash_rate_count = 0.0, 0
+    # Recompute the merkle root
+    block_template['merkleroot'] = tx_compute_merkle_root([tx['hash'] for tx in block_template['transactions']])
 
-    # Loop through the extranonce
-    extranonce = extranonce_start
-    while extranonce <= 0xffffffff:
-        # Update the coinbase transaction with the new extra nonce
-        coinbase_script = coinbase_message + int2lehex(extranonce, 4)
-        coinbase_tx['data'] = tx_make_coinbase(coinbase_script, address, block_template['coinbasevalue'], block_template['height'])
-        coinbase_tx['hash'] = tx_compute_hash(coinbase_tx['data'])
+    block_header = block_make_header(block_template)
+    print(block_header.hex())
+    time_stamp = time.time()
 
-        # Recompute the merkle root
-        block_template['merkleroot'] = tx_compute_merkle_root([tx['hash'] for tx in block_template['transactions']])
+    # Update the block header with the new 32-bit nonce
 
-        # Reform the block header
-        block_header = block_make_header(block_template)
+    # Recompute the block hash
+    block_hash = block_compute_raw_hash(block_header)
 
-        time_stamp = time.time()
+    # Check the dog death
+    if block_hash < target_hash:
+        block_template['nonce'] = 0
+        
 
-        # Loop through the nonce
-        nonce = 0 if not debugnonce_start else debugnonce_start
-        while nonce <= 0xffffffff:
-            # Update the block header with the new 32-bit nonce
-            block_header = block_header[0:76] + nonce.to_bytes(4, byteorder='little')
-
-            # Recompute the block hash
-            block_hash = block_compute_raw_hash(block_header)
-
-            # Check if it the block meets the target hash
-            if block_hash < target_hash:
-                block_template['nonce'] = nonce
-                block_template['hash'] = block_hash.hex()
-                return (block_template, hash_rate)
-
-            # Measure hash rate and check timeout
-            if nonce > 0 and nonce % 1048576 == 0:
-                hash_rate = hash_rate + ((1048576 / (time.time() - time_stamp)) - hash_rate) / (hash_rate_count + 1)
-                hash_rate_count += 1
-
-                time_stamp = time.time()
-
-                # If our mine time expired, return none
-                if timeout and (time_stamp - time_start) > timeout:
-                    return (None, hash_rate)
-
-            nonce += 1
-        extranonce += 1
-
-    # If we ran out of extra nonces, return none
-    return (None, hash_rate)
-
+    
 
 ################################################################################
 # Standalone Bitcoin Miner, Single-threaded
@@ -475,8 +454,7 @@ def standalone_miner(coinbase_message, address):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage: {:s} <coinbase message> <block reward address>".format(sys.argv[0]))
-        sys.exit(1)
-
-    standalone_miner(sys.argv[1].encode().hex(), sys.argv[2])
+    template = rpc_getblocktemplate()
+    coinbase_message = "This task's a gruelling one. Hope to find some diamonds tonight-night-night. Diamonds tonight!"
+    block_mine(template, coinbase_message, 'bc1q27geatqpasc3rdjdnmwgxyyzvyykdae867npjt')
+    # standalone_miner(sys.argv[1].encode().hex(), sys.argv[2])
