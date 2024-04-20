@@ -368,66 +368,42 @@ def block_make_submit(block):
 
 
 ################################################################################
-# Block Miner
+# Padded block header generator
 ################################################################################
 
 
-def block_mine(block_template, coinbase_message, address, timeout=None):
+def block_make_padded_header(coinbase_message, address):
     """
     Mine a block.
 
     Arguments:
-        block_template (dict): block template
         coinbase_message (bytes): binary string for coinbase script
         address (string): Base58 Bitcoin address for block reward
 
-    Timeout:
-        timeout (float): timeout in seconds
-        debugnonce_start (int): nonce start for testing purposes
-
     Returns:
-        (block submission, hash rate) on success,
-        (None, hash rate) on timeout or nonce exhaustion.
+        A new block header in bytes.
     """
+    block_template = rpc_getblocktemplate()
 
+    # Create and add the coinbase transaction $$$$$$
     coinbase_data = tx_make_coinbase(
         coinbase_message.encode().hex(),
         address,
         block_template['coinbasevalue'],
         block_template['height']
     )
+
     block_template['transactions'].insert(0, {
         'data': coinbase_data,
         'hash': tx_compute_hash(coinbase_data)
     })
 
-    # Add a nonce initialized to zero to the block template
-    block_template['nonce'] = 0
+    block_template['nonce'] = 69420
 
-    # Compute the target hash
-    target_hash = block_bits2target(block_template['bits'])
-
-    # Mark our mine start time
-    time_start = time.time()
-
-    # Recompute the merkle root
     block_template['merkleroot'] = tx_compute_merkle_root([tx['hash'] for tx in block_template['transactions']])
 
-    block_header = block_make_header(block_template)
-    print(block_header.hex())
-    time_stamp = time.time()
+    return block_make_header(block_template)
 
-    # Update the block header with the new 32-bit nonce
-
-    # Recompute the block hash
-    block_hash = block_compute_raw_hash(block_header)
-
-    # Check the dog death
-    if block_hash < target_hash:
-        block_template['nonce'] = 0
-        
-
-    
 
 ################################################################################
 # Standalone Bitcoin Miner, Single-threaded
@@ -451,10 +427,3 @@ def standalone_miner(coinbase_message, address):
             if response is not None:
                 print("Submission Error: {}".format(response))
                 break
-
-
-if __name__ == "__main__":
-    template = rpc_getblocktemplate()
-    coinbase_message = "This task's a gruelling one. Hope to find some diamonds tonight-night-night. Diamonds tonight!"
-    block_mine(template, coinbase_message, 'bc1q27geatqpasc3rdjdnmwgxyyzvyykdae867npjt')
-    # standalone_miner(sys.argv[1].encode().hex(), sys.argv[2])
