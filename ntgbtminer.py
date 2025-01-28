@@ -372,17 +372,7 @@ def block_make_submit(block):
 ################################################################################
 
 
-def block_make_padded_header(coinbase_message, address):
-    """
-    Mine a block.
-
-    Arguments:
-        coinbase_message (bytes): binary string for coinbase script
-        address (string): Base58 Bitcoin address for block reward
-
-    Returns:
-        A new block header in bytes.
-    """
+def get_header_bytes(coinbase_message, address):
     block_template = rpc_getblocktemplate()
 
     # Create and add the coinbase transaction $$$$$$
@@ -403,27 +393,3 @@ def block_make_padded_header(coinbase_message, address):
     block_template['merkleroot'] = tx_compute_merkle_root([tx['hash'] for tx in block_template['transactions']])
 
     return block_make_header(block_template)
-
-
-################################################################################
-# Standalone Bitcoin Miner, Single-threaded
-################################################################################
-
-
-def standalone_miner(coinbase_message, address):
-    while True:
-        block_template = rpc_getblocktemplate()
-
-        print("Mining block template, height {:d}...".format(block_template['height']))
-        mined_block, hash_rate = block_mine(block_template, coinbase_message, 0, address, timeout=60)
-        print("    {:.4f} KH/s\n".format(hash_rate / 1000.0))
-
-        if mined_block:
-            print("Solved a block! Block hash: {}".format(mined_block['hash']))
-            submission = block_make_submit(mined_block)
-
-            print("Submitting:", submission, "\n")
-            response = rpc_submitblock(submission)
-            if response is not None:
-                print("Submission Error: {}".format(response))
-                break
