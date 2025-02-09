@@ -2,22 +2,27 @@ from PIL import Image
 import os
 import json
 import struct
+import dotenv
+
+dotenv.load_dotenv()
+
+SCREENSHOTS_PATH = os.environ.get('SCREENSHOTS_PATH')
 
 config_path = os.path.join(
     os.path.dirname(__file__),
     'config.json'
 )
-with open(config_path, 'r') as fp:
-    config = json.load(fp)
+with open(config_path, 'r') as config_file:
+    config = json.load(config_file)
 start_x = config['starting_pixel_x'] 
 start_y = config['starting_pixel_y'] 
 
 # Find the most recent screenshot in screenshots folder
-screenshots = os.listdir(config['screenshots_path'])
-img_path = os.path.join(config['screenshots_path'], screenshots[0])
+screenshots = os.listdir(SCREENSHOTS_PATH)
+img_path = os.path.join(SCREENSHOTS_PATH, screenshots[0])
 
 for i in screenshots:
-    candidate_path = os.path.join(config['screenshots_path'], i)
+    candidate_path = os.path.join(SCREENSHOTS_PATH, i)
     if os.path.getmtime(candidate_path) > os.path.getmtime(img_path):
         img_path = candidate_path
 

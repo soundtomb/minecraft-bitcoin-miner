@@ -19,14 +19,16 @@ import time
 import os
 import sys
 from credentials import *
+import dotenv
 
 
 # JSON-HTTP RPC Configuration
 # This will be particular to your local ~/.bitcoin/bitcoin.conf
 
-# RPC_URL = os.environ.get("RPC_URL", "http://127.0.0.1:8332")
-# RPC_USER = os.environ.get("RPC_USER", "bitcoinrpc")
-# RPC_PASS = os.environ.get("RPC_PASS", "")
+dotenv.load_dotenv()
+RPC_URL = os.environ.get('RPC_URL')
+RPC_USER = os.environ.get('RPC_USER')
+RPC_PASS = os.environ.get('RPC_PASS')
 
 # RPC_USER = os.environ.get("RPC_USER", "bitcoinrpc")
 # RPC_PASS = os.environ.get("RPC_PASS", "")
