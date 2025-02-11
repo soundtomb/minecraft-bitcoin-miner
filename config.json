@@ -2,5 +2,9 @@
     "starting_pixel_x": 214,
     "starting_pixel_y": 859,
     "num_x_squares": 32,
-    "num_y_squares": 16
+    "num_y_squares": 16,
+    "seconds_between_chunks": 160,
+    "milliseconds_between_nibbles": 250,
+    "start_key": "`",
+    "log_poll_interval": 1
 }
