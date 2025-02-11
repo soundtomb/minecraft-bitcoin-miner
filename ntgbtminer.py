@@ -18,12 +18,10 @@ import random
 import time
 import os
 import sys
-from credentials import *
 import dotenv
 
 
 # JSON-HTTP RPC Configuration
-# This will be particular to your local ~/.bitcoin/bitcoin.conf
 
 dotenv.load_dotenv()
 RPC_URL = os.environ.get('RPC_URL')
