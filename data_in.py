@@ -1,6 +1,6 @@
 from pynput import keyboard, mouse
 from win_precise_time import sleep
-
+from config import config
 
 def bytes_to_nibbles(bytes: bytes):
     """
