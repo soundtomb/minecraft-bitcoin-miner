@@ -1,30 +1,44 @@
-# ntgbtminer
+# Minecraft Bitcoin Miner
 
-ntgbtminer is a no thrills
-[getblocktemplate](https://en.bitcoin.it/wiki/Getblocktemplate) Bitcoin miner.
-It is not performant, but demonstrates basic use of the getblocktemplate
-protocol for a standalone Bitcoin miner. It has no dependencies outside of
-standard Python libraries and a JSON-HTTP connection to your local Bitcoin
-daemon.
+## Script Install
 
-Donations are welcome at `15PKyTs3jJ3Nyf3i6R7D9tfGCY1ZbtqWdv` :)
+* Install Python
 
-## Usage
+* Clone or download this repository, and open a shell in the downloaded folder
 
-* Configure `rpcuser` and `rpcpass` in `~/.bitcoin/bitcoin.conf`
-
-* Start bitcoind
-
-```
-$ bitcoind -testnet -daemon
+```powershell
+git clone https://github.com/soundtomb/minecraft-bitcoin-miner.git
+cd minecraft-bitcoin-miner
 ```
 
-* Run ntgbtminer
+* Install the libraries. I recommend that you [create a virtual environment](https://docs.python.org/3/library/venv.html) first, so that there are no conflicts. You can install everything you need by running this command
 
+```powershell
+pip install -r requirements.txt
 ```
-$ RPC_USER=bitcoinrpc RPC_PASS=foobar RPC_URL="http://127.0.0.1:18332" \
-    python3 ntgbtminer.py "Hello from vsergeev!" "mr9zpiUkvGukpg1uZ99NdAxwJmuSYYmNA3"
+
+* Create a file named `.env`. Configure your credentials in `.env`. This should contain these secrets:
+  * `RPC_URL` The URL of your bitcoin node server
+  * `RPC_USER` The bitcoin node server's username
+  * `RPC_PASS` The bitcoin node server's password
+  * `SCREENSHOTS_PATH` The path to your minecraft screenshots folder
+  
+```sh
+RPC_URL=http://localhost:8332
+RPC_USER=your_username
+RPC_PASS=your_password
+SCREENSHOTS_PATH=/Path/To/Minecraft/Screenshots/Folder
 ```
+
+* Run the script with
+
+```sh
+python main.py
+```
+
+## Configuration
+
+This is done from `config.json`.
 
 ## License
 
