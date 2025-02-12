@@ -372,7 +372,7 @@ def block_make_submit(block):
 ################################################################################
 
 
-def get_header_bytes(coinbase_message, address):
+def block_template(coinbase_message: str, address: str, nonce=69420):
     block_template = rpc_getblocktemplate()
 
     # Create and add the coinbase transaction $$$$$$
@@ -388,8 +388,11 @@ def get_header_bytes(coinbase_message, address):
         'hash': tx_compute_hash(coinbase_data)
     })
 
-    block_template['nonce'] = 69420
+    block_template['nonce'] = nonce
 
     block_template['merkleroot'] = tx_compute_merkle_root([tx['hash'] for tx in block_template['transactions']])
+
+
+def get_header_bytes(block_template):
 
     return block_make_header(block_template)

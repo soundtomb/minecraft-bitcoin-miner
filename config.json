@@ -6,5 +6,8 @@
     "seconds_between_chunks": 160,
     "milliseconds_between_nibbles": 250,
     "start_key": "`",
-    "log_poll_interval": 1
+    "log_poll_interval": 1,
+    "dog_name": "Bitcoin",
+    "player_name": "soundtomb",
+    "loop_attempts": false
 }
