@@ -22,12 +22,14 @@ pip install -r requirements.txt
   * `RPC_USER` The bitcoin node server's username
   * `RPC_PASS` The bitcoin node server's password
   * `SCREENSHOTS_PATH` The path to your minecraft screenshots folder
+  * `LOG_PATH` The path to your world's chat logs
   
 ```sh
 RPC_URL=http://localhost:8332
 RPC_USER=your_username
 RPC_PASS=your_password
 SCREENSHOTS_PATH=/Path/To/Minecraft/Screenshots/Folder
+SCREENSHOTS_PATH=/Path/To/Minecraft/logs/latest.log
 ```
 
 * Run the script with
