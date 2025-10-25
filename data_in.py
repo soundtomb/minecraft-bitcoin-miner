@@ -71,6 +71,6 @@ def send_to_book(data: bytes, current_page=1, subtract_mode=True, milliseconds=2
         kbd.tap(keyboard.Key.tab)
         sleep(0.2)
     
-    return (current_page, subtract_mode)
+    return current_page, subtract_mode
 
 
