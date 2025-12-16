@@ -4,7 +4,7 @@ from config import config
 
 def bytes_to_nibbles(bytes: bytes):
     """
-    Generate the high and low nibbles of each byte 
+    Generate the high and low nibbles of each byte
     """
     for byte in bytes:
         yield byte >> 4
@@ -14,7 +14,7 @@ def bytes_to_nibbles(bytes: bytes):
 kbd = keyboard.Controller()
 mousie = mouse.Controller()
 
-def move_page(current_page: int, target_page: int, milliseconds=250):
+def move_page(current_page: int, target_page: int):
     """
     Move to a particular page in the book.
     """
@@ -38,7 +38,7 @@ def move_page(current_page: int, target_page: int, milliseconds=250):
         for _ in range(abs(offset)):
             kbd.tap(keyboard.Key.page_up)
     
-    sleep(milliseconds / 1000) # The jankest part of all. This lines the inputs up with redstone ticks.
+    sleep(config['milliseconds_between_nibbles'] / 1000) # The jankest part of all. This lines the inputs up with redstone ticks.
     return target_page
 
 
@@ -72,5 +72,3 @@ def send_to_book(data: bytes, current_page=1, subtract_mode=True, milliseconds=2
         sleep(0.2)
     
     return current_page, subtract_mode
-
-
