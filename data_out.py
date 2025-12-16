@@ -1,4 +1,4 @@
-from PIL import Image
+from PIL import Image, ImageFile
 import os
 import struct
 import dotenv
@@ -20,14 +20,16 @@ for i in screenshots:
     if os.path.getmtime(candidate_path) > os.path.getmtime(img_path):
         img_path = candidate_path
 
+print('Scanning: ', img_path)
+
 # Get the rounded greyscale colour at coord (x, y)
-def get_pix_val(im, coord):
+def get_pix_val(im: ImageFile, coord: tuple[int]):
     pixel = im.getpixel(coord)
     return round(((pixel[0] + pixel[1] + pixel[2]) + 0) / (255 * 3))
 
 # Format 16 bit int as hex
-def pretty_hex(a):
-    return ''.join('{:02x}'.format(byte) for byte in a)
+def pretty_hex(number: int):
+    return ''.join('{:02x}'.format(byte) for byte in number)
 
 with Image.open(img_path) as im:
     x_squares = []
@@ -50,9 +52,6 @@ with Image.open(img_path) as im:
             last_val = 1 - last_val
         guide += 1
 
-    # convert each pixel column to an integer
-    # TODO: this should probably be a bytearray, but keeping it as int now is a bit easier
-
     result = bytes()
     for i in range(0, config['num_x_squares'], 2):
         mask = 1 << config['num_y_squares'] - 1
@@ -64,4 +63,3 @@ with Image.open(img_path) as im:
         result += struct.pack('>H', half_word)
 
     print('Hash:', pretty_hex(result))
-
