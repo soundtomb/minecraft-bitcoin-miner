@@ -15,9 +15,7 @@ import json
 import hashlib
 import struct
 import random
-import time
 import os
-import sys
 import dotenv
 
 
@@ -27,9 +25,6 @@ dotenv.load_dotenv()
 RPC_URL = os.environ.get('RPC_URL')
 RPC_USER = os.environ.get('RPC_USER')
 RPC_PASS = os.environ.get('RPC_PASS')
-
-# RPC_USER = os.environ.get("RPC_USER", "bitcoinrpc")
-# RPC_PASS = os.environ.get("RPC_PASS", "")
 
 ################################################################################
 # Bitcoin Daemon JSON-HTTP RPC
@@ -348,7 +343,7 @@ def block_make_submit(block):
     Format a solved block into the ASCII hex submit format.
 
     Arguments:
-        block (dict): block template with 'nonce' and 'hash' populated
+        block (dict): block template with 'nonce' populated
 
     Returns:
         string: block submission as an ASCII hex string
@@ -393,6 +388,24 @@ def block_template(coinbase_message: str, address: str, nonce=69420):
     block_template['merkleroot'] = tx_compute_merkle_root([tx['hash'] for tx in block_template['transactions']])
 
 
-def get_header_bytes(block_template):
+def get_block_template(coinbase_message: str, address: str):
+    block_template = rpc_getblocktemplate()
 
-    return block_make_header(block_template)
+    # Create and add the coinbase transaction $$$$$$
+    coinbase_data = tx_make_coinbase(
+        coinbase_message.encode().hex(),
+        address,
+        block_template['coinbasevalue'],
+        block_template['height']
+    )
+
+    block_template['transactions'].insert(0, {
+        'data': coinbase_data,
+        'hash': tx_compute_hash(coinbase_data)
+    })
+
+    block_template['nonce'] = 69420
+
+    block_template['merkleroot'] = tx_compute_merkle_root([tx['hash'] for tx in block_template['transactions']])
+
+    return block_template
