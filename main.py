@@ -3,19 +3,11 @@ from pynput import keyboard, mouse
 import data_in
 from time import sleep
 from config import config
-import asyncio
-import watchfiles
 import os
 import dotenv
 import time
 
-
-
-TEST_HEADER = bytes.fromhex('02000000b6ff0b1b1680a2862a30ca44d346d9e8910d334beb48ca0c00000000000000009d10aa52ee949386ca9385695f04ede270dda20810decd12bc9b048aaab3147124d95a5430c31b18fe9f0864')
-REAL_TEST_HEADER = bytes.fromhex('0100000081cd02ab7e569e8bcd9317e2fe99f2de44d49ab2b8851ba4a308000000000000e320b6c2fffc8d750423db8b1eb942ae710e951ed797f7affc8892b0f1fc122bc7f5d74df2b9441a42a14695')
-FAILED_TEST_HEADER = bytes.fromhex('1100000081cd02ab7e569e8bcd9317e2fe99f2de44d49ab2b8851ba4a308000000000000e320b6c2fffc8d750423db8b1eb942ae710e951ed797f7affc8892b0f1fc122bc7f5d74df2b9441a42a14695')
 dotenv.load_dotenv()
-
 
 
 def player_death_reset():
@@ -29,14 +21,20 @@ def player_death_reset():
 
 
 def start_mining():
-    while config['loop_attempts']:
-        # coinbase_message = "This task's a gruelling one. Hope to find some diamonds tonight-night-night. Diamonds tonight!"
-        # header = ntgbtminer.get_header_bytes(coinbase_message, 'bc1q27geatqpasc3rdjdnmwgxyyzvyykdae867npjt'
 
+    test = config['use_test_header']
+    
+    if not test:
+        block_template = ntgbtminer.get_block_template(config['coinbase_message'], config['address'])
+    while config['loop_attempts']:
+        if test:
+            header = bytes.fromhex(config['test_header'])
+        else:
+            header = ntgbtminer.block_make_header(block_template)
+
+        
         # Pad the header according to the SHA-256 spec:
         #   0x80 at the start, and the length of the message at the end
-        header = FAILED_TEST_HEADER
-
         header += b'\x80' + b'\x00' * 45 + bytes.fromhex('0280')
         
         # Send the first chunk
@@ -54,19 +52,28 @@ def start_mining():
 
         print('All the data is in the game. Checking for death message...')
         message = poll_log()
+
         if message.find(config['dog_name']) >= 0:
             print('Success!')
+            if not test:
+                # Send off the block to the network
+                submission = ntgbtminer.block_make_submit(block_template)
+                ntgbtminer.rpc_submitblock(submission)
         else:
             print('Better luck next time!')
+            
+        if test:
+            return
+        else:
+            block_template['nonce'] += 1
 
 
 def on_press(key: keyboard.KeyCode): 
     if key == keyboard.KeyCode.from_char(config['start_key']):
         return False
-        
 
 
-def check_death_message(file_path: str) -> str:
+def check_death_message(file_path: str):
 
     # Only check the file if it was updated in the last 5 seconds
     if time.time() - os.path.getmtime(file_path) > 5:
@@ -104,7 +111,4 @@ def main():
     start_mining()
     
 if __name__ == '__main__':
-    try:
-        main()
-    except KeyboardInterrupt:
-        print('stopped via KeyboardInterrupt')
+    main()
